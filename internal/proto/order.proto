@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package order;
+
+option go_package = "../proto";
+
+service OrderService {
+    rpc PlaceOrder(PlaceOrderRequest) returns (PlaceOrderResponse);
+    rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);
+    rpc ListCustomersOrders(ListCustomersOrdersRequest) returns (ListCustomersOrdersResponse);
+    rpc ListAllOrders(ListAllOrdersRequest) returns (ListAllOrdersResponse);
+    rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (UpdateOrderStatusResponse);
+}
+
+message OrderItem {
+    string product_id = 1;
+    int32 quantity = 2;
+}
+
+message PlaceOrderRequest {
+    string customer_id = 1;
+    repeated OrderItem items = 2;
+    optional string prescription_url = 3;
+}
+
+message PlaceOrderResponse {
+    string order_id = 1;
+    string status = 2;
+}
+
+message GetOrderRequest {
+    string order_id = 1;
+}
+
+message GetOrderResponse {
+    string order_id = 1;
+    string customer_id = 2;
+    repeated OrderItem items = 3;
+    string status = 4;
+    optional string prescription_url = 5;
+}
+
+message ListCustomersOrdersRequest {
+    string customer_id = 1;
+}
+
+message ListCustomersOrdersResponse {
+    repeated GetOrderResponse orders = 1;
+}
+
+message ListAllOrdersRequest {
+}
+
+message ListAllOrdersResponse {
+    repeated GetOrderResponse orders = 1;
+}
+
+message UpdateOrderStatusRequest {
+    string order_id = 1;
+    string status = 2;
+}
+
+message UpdateOrderStatusResponse {
+    string message = 1;
+}
