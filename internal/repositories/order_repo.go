@@ -8,8 +8,8 @@ import (
 type OrderRepository interface {
 	CreateOrder(order *models.Order) error
 	GetOrderByID(orderID string) (*models.Order, *[]models.OrderItem, error)
-	ListCustomersOrders(customerID string) (*[]models.Order, error)
-	ListAllOrders() (*[]models.Order, error)
+	ListCustomersOrders(customerID string, page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Order, error)
+	ListAllOrders(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Order, error)
 	UpdateOrderStatus(orderID string, status string) error
 }
 
@@ -41,24 +41,57 @@ func (r *orderRepository) GetOrderByID(orderID string) (*models.Order, *[]models
 	return &order, &items, nil
 }
 
-func (r *orderRepository) ListCustomersOrders(customerID string) (*[]models.Order, error) {
+func (r *orderRepository) ListCustomersOrders(customerID string, page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Order, error) {
 	var orders []models.Order
-	err := r.db.Where("customer_id = ?", customerID).Find(&orders).Error
-	if err != nil {
-		return nil, err
+
+	if page <= 0 {
+		page = 1
+	}
+	if limit <= 0 {
+		limit = 10
 	}
 
-	return &orders, nil
+	query := r.db
+	if filter != "" && filterValue != "" {
+		query = query.Where(filter+" = ?", filterValue)
+	}
+
+	if sortBy != "" {
+		if sortOrder == "" {
+			sortOrder = "asc"
+		}
+		query = query.Order(sortBy + " " + sortOrder)
+	}
+
+	err := query.Offset(int((page - 1) * limit)).Limit(int(limit)).Find(&orders).Error
+	return orders, err
 }
 
-func (r *orderRepository) ListAllOrders() (*[]models.Order, error) {
+func (r *orderRepository) ListAllOrders(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Order, error) {
 	var orders []models.Order
-	err := r.db.Find(&orders).Error
-	if err != nil {
-		return nil, err
+
+	if page <= 0 {
+		page = 1
+	}
+	if limit <= 0 {
+		limit = 10
 	}
 
-	return &orders, nil
+	query := r.db
+	if filter != "" && filterValue != "" {
+		query = query.Where(filter+" = ?", filterValue)
+	}
+
+	if sortBy != "" {
+		if sortOrder == "" {
+			sortOrder = "asc"
+		}
+		query = query.Order(sortBy + " " + sortOrder)
+	}
+
+	err := query.Offset(int((page - 1) * limit)).Limit(int(limit)).Find(&orders).Error
+
+	return orders, err
 }
 
 func (r *orderRepository) UpdateOrderStatus(orderID string, status string) error {

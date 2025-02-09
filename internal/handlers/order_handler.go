@@ -84,7 +84,7 @@ func (h *orderHandler) GetOrder(ctx context.Context, req *proto.GetOrderRequest)
 }
 
 func (h *orderHandler) ListCustomersOrders(ctx context.Context, req *proto.ListCustomersOrdersRequest) (*proto.ListCustomersOrdersResponse, error) {
-	orders, err := h.orderService.ListCustomersOrders(req.CustomerId)
+	orders, err := h.orderService.ListCustomersOrders(req.CustomerId, req.Page, req.Limit, req.SortBy, req.SortOrder, req.Filter, req.FilterValue)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (h *orderHandler) ListCustomersOrders(ctx context.Context, req *proto.ListC
 }
 
 func (h *orderHandler) ListAllOrders(ctx context.Context, req *proto.ListAllOrdersRequest) (*proto.ListAllOrdersResponse, error) {
-	orders, err := h.orderService.ListAllOrders()
+	orders, err := h.orderService.ListAllOrders(req.Page, req.Limit, req.SortBy, req.SortOrder, req.Filter, req.FilterValue)
 	if err != nil {
 		return nil, err
 	}
