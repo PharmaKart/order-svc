@@ -84,7 +84,7 @@ func (h *orderHandler) GetOrder(ctx context.Context, req *proto.GetOrderRequest)
 }
 
 func (h *orderHandler) ListCustomersOrders(ctx context.Context, req *proto.ListCustomersOrdersRequest) (*proto.ListCustomersOrdersResponse, error) {
-	orders, err := h.orderService.ListCustomersOrders(req.CustomerId, req.Page, req.Limit, req.SortBy, req.SortOrder, req.Filter, req.FilterValue)
+	orders, total, err := h.orderService.ListCustomersOrders(req.CustomerId, req.Page, req.Limit, req.SortBy, req.SortOrder, req.Filter, req.FilterValue)
 	if err != nil {
 		return nil, err
 	}
@@ -107,11 +107,16 @@ func (h *orderHandler) ListCustomersOrders(ctx context.Context, req *proto.ListC
 		protoOrders[i].Items = protoOrderItems
 	}
 
-	return &proto.ListCustomersOrdersResponse{Orders: protoOrders}, nil
+	return &proto.ListCustomersOrdersResponse{
+		Orders: protoOrders,
+		Total:  total,
+		Page:   req.Page,
+		Limit:  req.Limit,
+	}, nil
 }
 
 func (h *orderHandler) ListAllOrders(ctx context.Context, req *proto.ListAllOrdersRequest) (*proto.ListAllOrdersResponse, error) {
-	orders, err := h.orderService.ListAllOrders(req.Page, req.Limit, req.SortBy, req.SortOrder, req.Filter, req.FilterValue)
+	orders, total, err := h.orderService.ListAllOrders(req.Page, req.Limit, req.SortBy, req.SortOrder, req.Filter, req.FilterValue)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +139,12 @@ func (h *orderHandler) ListAllOrders(ctx context.Context, req *proto.ListAllOrde
 		protoOrders[i].Items = protoOrderItems
 	}
 
-	return &proto.ListAllOrdersResponse{Orders: protoOrders}, nil
+	return &proto.ListAllOrdersResponse{
+		Orders: protoOrders,
+		Total:  total,
+		Page:   req.Page,
+		Limit:  req.Limit,
+	}, nil
 }
 
 func (h *orderHandler) UpdateOrderStatus(ctx context.Context, req *proto.UpdateOrderStatusRequest) (*proto.UpdateOrderStatusResponse, error) {

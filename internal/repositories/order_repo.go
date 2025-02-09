@@ -8,8 +8,8 @@ import (
 type OrderRepository interface {
 	CreateOrder(order *models.Order) error
 	GetOrderByID(orderID string) (*models.Order, *[]models.OrderItem, error)
-	ListCustomersOrders(customerID string, page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Order, error)
-	ListAllOrders(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Order, error)
+	ListCustomersOrders(customerID string, page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Order, int32, error)
+	ListAllOrders(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Order, int32, error)
 	UpdateOrderStatus(orderID string, status string) error
 }
 
@@ -41,8 +41,9 @@ func (r *orderRepository) GetOrderByID(orderID string) (*models.Order, *[]models
 	return &order, &items, nil
 }
 
-func (r *orderRepository) ListCustomersOrders(customerID string, page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Order, error) {
+func (r *orderRepository) ListCustomersOrders(customerID string, page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Order, int32, error) {
 	var orders []models.Order
+	var total int64
 
 	if page <= 0 {
 		page = 1
@@ -64,11 +65,20 @@ func (r *orderRepository) ListCustomersOrders(customerID string, page int32, lim
 	}
 
 	err := query.Offset(int((page - 1) * limit)).Limit(int(limit)).Find(&orders).Error
-	return orders, err
+	if err != nil {
+		return nil, 0, err
+	}
+
+	err = query.Model(&models.Order{}).Where("customer_id = ?", customerID).Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	return orders, int32(total), err
 }
 
-func (r *orderRepository) ListAllOrders(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Order, error) {
+func (r *orderRepository) ListAllOrders(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Order, int32, error) {
 	var orders []models.Order
+	var total int64
 
 	if page <= 0 {
 		page = 1
@@ -90,8 +100,16 @@ func (r *orderRepository) ListAllOrders(page int32, limit int32, sortBy string, 
 	}
 
 	err := query.Offset(int((page - 1) * limit)).Limit(int(limit)).Find(&orders).Error
+	if err != nil {
+		return nil, 0, err
+	}
 
-	return orders, err
+	err = query.Model(&models.Order{}).Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return orders, int32(total), err
 }
 
 func (r *orderRepository) UpdateOrderStatus(orderID string, status string) error {
