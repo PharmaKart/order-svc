@@ -7,8 +7,7 @@ import (
 )
 
 // ConnectDB connects to the database
-func ConnectDB() (*gorm.DB, error) {
-	cfg := config.LoadConfig()
+func ConnectDB(cfg *config.Config) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(cfg.DBConnString), &gorm.Config{})
 	if err != nil {
 		return nil, err

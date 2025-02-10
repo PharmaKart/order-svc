@@ -10,7 +10,6 @@ import (
 	"github.com/PharmaKart/order-svc/pkg/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"gorm.io/gorm"
 )
 
 func main() {
@@ -20,9 +19,17 @@ func main() {
 	// Load configuration
 	cfg := config.LoadConfig()
 
+	// Initialize database connection
+	db, err := utils.ConnectDB(cfg)
+	if err != nil {
+		utils.Logger.Fatal("Failed to connect to database", map[string]interface{}{
+			"error": err,
+		})
+	}
+
 	// Initialize repositories
-	orderRepo := repositories.NewOrderRepository(&gorm.DB{})
-	orderItemRepo := repositories.NewOrderItemRepository(&gorm.DB{})
+	orderRepo := repositories.NewOrderRepository(db)
+	orderItemRepo := repositories.NewOrderItemRepository(db)
 
 	// Initialize product client
 	productConn, err := grpc.NewClient(cfg.ProductServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
