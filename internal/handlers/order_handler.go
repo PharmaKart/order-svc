@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 
 	"github.com/PharmaKart/order-svc/internal/models"
 	"github.com/PharmaKart/order-svc/internal/proto"
@@ -23,9 +24,9 @@ type orderHandler struct {
 	orderService services.OrderService
 }
 
-func NewOrderHandler(orderRepo repositories.OrderRepository, orderItemRepo repositories.OrderItemRepository, productClient *proto.ProductServiceClient) *orderHandler {
+func NewOrderHandler(orderRepo repositories.OrderRepository, orderItemRepo repositories.OrderItemRepository, productClient *proto.ProductServiceClient, paymentClient *proto.PaymentServiceClient) *orderHandler {
 	return &orderHandler{
-		orderService: services.NewOrderService(orderRepo, orderItemRepo, productClient),
+		orderService: services.NewOrderService(orderRepo, orderItemRepo, productClient, paymentClient),
 	}
 }
 
@@ -36,7 +37,7 @@ func (h *orderHandler) PlaceOrder(ctx context.Context, req *proto.PlaceOrderRequ
 	}
 	order := &models.Order{
 		CustomerID:      customerId,
-		Status:          "pending",
+		Status:          "payment_pending",
 		PrescriptionURL: req.PrescriptionUrl,
 	}
 	orderItems := make([]models.OrderItem, len(req.Items))
@@ -52,12 +53,15 @@ func (h *orderHandler) PlaceOrder(ctx context.Context, req *proto.PlaceOrderRequ
 		}
 	}
 
-	err = h.orderService.CreateOrder(*order, orderItems)
+	orderId, paymentUrl, err := h.orderService.CreateOrder(*order, orderItems)
 	if err != nil {
 		return nil, err
 	}
 
-	return &proto.PlaceOrderResponse{OrderId: order.ID.String()}, nil
+	return &proto.PlaceOrderResponse{
+		OrderId:    orderId,
+		PaymentUrl: paymentUrl,
+	}, nil
 }
 
 func (h *orderHandler) GetOrder(ctx context.Context, req *proto.GetOrderRequest) (*proto.GetOrderResponse, error) {
@@ -66,11 +70,18 @@ func (h *orderHandler) GetOrder(ctx context.Context, req *proto.GetOrderRequest)
 		return nil, err
 	}
 
+	customerId := req.CustomerId
+
+	if customerId != "admin" && order.CustomerID.String() != customerId {
+		return nil, errors.New("Access denied")
+	}
+
 	protoOrderItems := make([]*proto.OrderItem, len(*orderItems))
 	for i, item := range *orderItems {
 		protoOrderItems[i] = &proto.OrderItem{
 			ProductId: item.ProductID.String(),
 			Quantity:  int32(item.Quantity),
+			Price:     item.Price,
 		}
 	}
 

@@ -6,7 +6,7 @@ import (
 )
 
 type OrderRepository interface {
-	CreateOrder(order *models.Order) error
+	CreateOrder(order *models.Order) (string, error)
 	GetOrderByID(orderID string) (*models.Order, *[]models.OrderItem, error)
 	ListCustomersOrders(customerID string, page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Order, int32, error)
 	ListAllOrders(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Order, int32, error)
@@ -21,8 +21,13 @@ func NewOrderRepository(db *gorm.DB) OrderRepository {
 	return &orderRepository{db}
 }
 
-func (r *orderRepository) CreateOrder(order *models.Order) error {
-	return r.db.Create(order).Error
+func (r *orderRepository) CreateOrder(order *models.Order) (string, error) {
+	// return r.db.Create(order).Error
+	if err := r.db.Create(order).Error; err != nil {
+		return "", err
+	}
+
+	return order.ID.String(), nil
 }
 
 func (r *orderRepository) GetOrderByID(orderID string) (*models.Order, *[]models.OrderItem, error) {

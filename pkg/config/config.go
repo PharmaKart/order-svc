@@ -9,10 +9,10 @@ import (
 )
 
 type Config struct {
-	Port               string
-	DBConnString       string
-	ProductServiceURL  string
-	ReminderServiceURL string
+	Port              string
+	DBConnString      string
+	ProductServiceURL string
+	PaymentServiceURL string
 }
 
 // LoadConfig loads configuration from environment variables or a .env file.
@@ -23,10 +23,10 @@ func LoadConfig() *Config {
 	}
 
 	return &Config{
-		Port:               getEnv("PORT", "50053"),
-		DBConnString:       getDBConnString(),
-		ProductServiceURL:  getEnv("PRODUCT_SERVICE_URL", "localhost:50052"),
-		ReminderServiceURL: getEnv("REMINDER_SERVICE_URL", "localhost:50055"),
+		Port:              getEnv("PORT", "50053"),
+		DBConnString:      getDBConnString(),
+		ProductServiceURL: getEnv("PRODUCT_SERVICE_URL", "localhost:50052"),
+		PaymentServiceURL: getEnv("PAYMENT_SERVICE_URL", "localhost:50054"),
 	}
 }
 

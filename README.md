@@ -108,7 +108,7 @@ ORDER_DB_USER=postgres
 ORDER_DB_PASSWORD=yourpassword
 ORDER_DB_NAME=pharmakartdb
 PRODUCT_SERVICE_URL=localhost:50052
-REMINDER_SERVICE_URL=localhost:50055
+PAYMENT_SERVICE_URL=localhost:50054
 ```
 
 ---

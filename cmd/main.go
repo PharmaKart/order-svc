@@ -25,18 +25,29 @@ func main() {
 	orderItemRepo := repositories.NewOrderItemRepository(&gorm.DB{})
 
 	// Initialize product client
-	conn, err := grpc.NewClient(cfg.ProductServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	productConn, err := grpc.NewClient(cfg.ProductServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		utils.Logger.Fatal("Failed to connect to product service", map[string]interface{}{
 			"error": err,
 		})
 	}
 
-	productClient := proto.NewProductServiceClient(conn)
-	defer conn.Close()
+	productClient := proto.NewProductServiceClient(productConn)
+	defer productConn.Close()
+
+	// Initialize payment client
+	paymentConn, err := grpc.NewClient(cfg.PaymentServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		utils.Logger.Fatal("Failed to connect to product service", map[string]interface{}{
+			"error": err,
+		})
+	}
+
+	paymentClient := proto.NewPaymentServiceClient(paymentConn)
+	defer paymentConn.Close()
 
 	// Initialize handlers
-	orderHandler := handlers.NewOrderHandler(orderRepo, orderItemRepo, &productClient)
+	orderHandler := handlers.NewOrderHandler(orderRepo, orderItemRepo, &productClient, &paymentClient)
 
 	// Initialize gRPC server
 	lis, err := net.Listen("tcp", ":"+cfg.Port)

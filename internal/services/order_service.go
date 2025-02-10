@@ -10,7 +10,7 @@ import (
 )
 
 type OrderService interface {
-	CreateOrder(order models.Order, orderItems []models.OrderItem) error
+	CreateOrder(order models.Order, orderItems []models.OrderItem) (string, string, error)
 	GetOrderByID(orderID string) (*models.Order, *[]models.OrderItem, error)
 	ListCustomersOrders(customerID string, page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) (*[]OrderResponse, int32, error)
 	ListAllOrders(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) (*[]OrderResponse, int32, error)
@@ -21,6 +21,7 @@ type orderService struct {
 	orderRepo     repositories.OrderRepository
 	orderItemRepo repositories.OrderItemRepository
 	productClient proto.ProductServiceClient
+	paymentClient proto.PaymentServiceClient
 }
 
 type OrderResponse struct {
@@ -31,24 +32,25 @@ type OrderResponse struct {
 	Items           []models.OrderItem
 }
 
-func NewOrderService(orderRepo repositories.OrderRepository, orderItemRepo repositories.OrderItemRepository, productClient *proto.ProductServiceClient) OrderService {
+func NewOrderService(orderRepo repositories.OrderRepository, orderItemRepo repositories.OrderItemRepository, productClient *proto.ProductServiceClient, paymentClient *proto.PaymentServiceClient) OrderService {
 	return &orderService{
 		orderRepo:     orderRepo,
 		orderItemRepo: orderItemRepo,
 		productClient: *productClient,
+		paymentClient: *paymentClient,
 	}
 }
 
-func (s *orderService) CreateOrder(order models.Order, orderItems []models.OrderItem) error {
+func (s *orderService) CreateOrder(order models.Order, orderItems []models.OrderItem) (string, string, error) {
 	// Check Product Service for product stock
 	ctx := context.Background()
 	for _, item := range orderItems {
 		product, err := s.productClient.GetProduct(ctx, &proto.GetProductRequest{ProductId: item.ProductID.String()})
 		if err != nil {
-			return err
+			return "", "", err
 		}
 		if int(product.Product.Stock) < item.Quantity {
-			return errors.New("Product out of stock")
+			return "", "", errors.New("Product out of stock")
 		}
 		// Deduct stock from product
 		_, err = s.productClient.UpdateStock(ctx, &proto.UpdateStockRequest{
@@ -57,7 +59,7 @@ func (s *orderService) CreateOrder(order models.Order, orderItems []models.Order
 			Reason:    "order_placed",
 		})
 		if err != nil {
-			return err
+			return "", "", err
 		}
 		item.Price = product.Product.Price
 		item.OrderID = order.ID
@@ -65,7 +67,20 @@ func (s *orderService) CreateOrder(order models.Order, orderItems []models.Order
 		s.orderItemRepo.AddOrderItem(&item)
 	}
 
-	return s.orderRepo.CreateOrder(&order)
+	order_id, err := s.orderRepo.CreateOrder(&order)
+	if err != nil {
+		return "", "", err
+	}
+
+	paymentURL, err := s.paymentClient.GeneratePaymentURL(ctx, &proto.GeneratePaymentURLRequest{
+		OrderId:    order_id,
+		CustomerId: order.CustomerID.String(),
+	})
+	if err != nil {
+		return "", "", err
+	}
+
+	return order_id, paymentURL.Url, nil
 }
 
 func (s *orderService) GetOrderByID(orderID string) (*models.Order, *[]models.OrderItem, error) {
