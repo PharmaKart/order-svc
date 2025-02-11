@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"fmt"
+
 	"github.com/PharmaKart/order-svc/internal/models"
 	"gorm.io/gorm"
 )
@@ -22,6 +24,10 @@ func NewOrderRepository(db *gorm.DB) OrderRepository {
 }
 
 func (r *orderRepository) CreateOrder(order *models.Order) (string, error) {
+	stmt := r.db.Session(&gorm.Session{DryRun: true}).Create(order).Statement
+	sql := stmt.SQL.String()
+	fmt.Printf("Generated SQL: %s\n", sql)
+	fmt.Printf("Variables: %v\n", stmt.Vars)
 	// return r.db.Create(order).Error
 	if err := r.db.Create(order).Error; err != nil {
 		return "", err

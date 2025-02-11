@@ -38,7 +38,7 @@ func getDBConnString() string {
 		getEnv("DB_PASSWORD", "postgres"),
 		getEnv("DB_HOST", "localhost"),
 		getEnv("DB_PORT", "5432"),
-		getEnv("DB_NAME", "orderdb"),
+		getEnv("DB_NAME", "pharmakartdb"),
 	)
 }
 

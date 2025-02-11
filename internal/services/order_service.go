@@ -44,6 +44,7 @@ func NewOrderService(orderRepo repositories.OrderRepository, orderItemRepo repos
 func (s *orderService) CreateOrder(order models.Order, orderItems []models.OrderItem) (string, string, error) {
 	// Check Product Service for product stock
 	ctx := context.Background()
+	orderItemsList := []models.OrderItem{}
 	for _, item := range orderItems {
 		product, err := s.productClient.GetProduct(ctx, &proto.GetProductRequest{ProductId: item.ProductID.String()})
 		if err != nil {
@@ -54,22 +55,27 @@ func (s *orderService) CreateOrder(order models.Order, orderItems []models.Order
 		}
 		// Deduct stock from product
 		_, err = s.productClient.UpdateStock(ctx, &proto.UpdateStockRequest{
-			ProductId: item.ProductID.String(),
-			Quantity:  int32(item.Quantity) * -1,
-			Reason:    "order_placed",
+			ProductId:      item.ProductID.String(),
+			QuantityChange: int32(item.Quantity) * -1,
+			Reason:         "order_placed",
 		})
 		if err != nil {
 			return "", "", err
 		}
 		item.Price = product.Product.Price
-		item.OrderID = order.ID
-
-		s.orderItemRepo.AddOrderItem(&item)
+		orderItemsList = append(orderItemsList, item)
 	}
 
 	order_id, err := s.orderRepo.CreateOrder(&order)
 	if err != nil {
 		return "", "", err
+	}
+
+	for _, item := range orderItemsList {
+
+		item.OrderID = order.ID
+
+		s.orderItemRepo.AddOrderItem(&item)
 	}
 
 	paymentURL, err := s.paymentClient.GeneratePaymentURL(ctx, &proto.GeneratePaymentURLRequest{

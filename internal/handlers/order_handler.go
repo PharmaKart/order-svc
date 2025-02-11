@@ -48,8 +48,9 @@ func (h *orderHandler) PlaceOrder(ctx context.Context, req *proto.PlaceOrderRequ
 			return nil, err
 		}
 		orderItems[i] = models.OrderItem{
-			ProductID: productId,
-			Quantity:  int(item.Quantity),
+			ProductID:   productId,
+			ProductName: item.ProductName,
+			Quantity:    int(item.Quantity),
 		}
 	}
 
@@ -79,9 +80,10 @@ func (h *orderHandler) GetOrder(ctx context.Context, req *proto.GetOrderRequest)
 	protoOrderItems := make([]*proto.OrderItem, len(*orderItems))
 	for i, item := range *orderItems {
 		protoOrderItems[i] = &proto.OrderItem{
-			ProductId: item.ProductID.String(),
-			Quantity:  int32(item.Quantity),
-			Price:     item.Price,
+			ProductId:   item.ProductID.String(),
+			ProductName: item.ProductName,
+			Quantity:    int32(item.Quantity),
+			Price:       item.Price,
 		}
 	}
 
@@ -111,8 +113,10 @@ func (h *orderHandler) ListCustomersOrders(ctx context.Context, req *proto.ListC
 		protoOrderItems := make([]*proto.OrderItem, len(order.Items))
 		for j, item := range order.Items {
 			protoOrderItems[j] = &proto.OrderItem{
-				ProductId: item.ProductID.String(),
-				Quantity:  int32(item.Quantity),
+				ProductId:   item.ProductID.String(),
+				ProductName: item.ProductName,
+				Quantity:    int32(item.Quantity),
+				Price:       float64(item.Price),
 			}
 		}
 		protoOrders[i].Items = protoOrderItems
@@ -143,8 +147,10 @@ func (h *orderHandler) ListAllOrders(ctx context.Context, req *proto.ListAllOrde
 		protoOrderItems := make([]*proto.OrderItem, len(order.Items))
 		for j, item := range order.Items {
 			protoOrderItems[j] = &proto.OrderItem{
-				ProductId: item.ProductID.String(),
-				Quantity:  int32(item.Quantity),
+				ProductId:   item.ProductID.String(),
+				ProductName: item.ProductName,
+				Quantity:    int32(item.Quantity),
+				Price:       float64(item.Price),
 			}
 		}
 		protoOrders[i].Items = protoOrderItems
