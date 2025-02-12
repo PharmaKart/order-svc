@@ -1,0 +1,29 @@
+# Binaries for programs and plugins
+bin/
+
+# IDE-specific files
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.local
+
+# Log files
+*.log
+
+# Test output
+coverage.txt
+*.out
+
+# Build artifacts
+*.exe
+*.test
+*.prof
+
+# Go modules
+go.sum
+
+# OS-specific files
+.DS_Store
+Thumbs.db
