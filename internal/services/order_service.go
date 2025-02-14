@@ -12,9 +12,9 @@ import (
 type OrderService interface {
 	CreateOrder(order models.Order, orderItems []models.OrderItem) (string, string, error)
 	GetOrderByID(orderID string) (*models.Order, *[]models.OrderItem, error)
-	ListCustomersOrders(customerID string, page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) (*[]OrderResponse, int32, error)
-	ListAllOrders(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) (*[]OrderResponse, int32, error)
-	UpdateOrderStatus(orderID string, status string) error
+	ListCustomersOrders(customerID string, page, limit int32, sortBy, sortOrder, filter, filterValue string) (*[]OrderResponse, int32, error)
+	ListAllOrders(page, limit int32, sortBy, sortOrder, filter, filterValue string) (*[]OrderResponse, int32, error)
+	UpdateOrderStatus(orderID, customerID, status string) error
 }
 
 type orderService struct {
@@ -148,6 +148,31 @@ func (s *orderService) ListAllOrders(page int32, limit int32, sortBy string, sor
 	return &ordersResponse, total, nil
 }
 
-func (s *orderService) UpdateOrderStatus(orderID string, status string) error {
+func (s *orderService) UpdateOrderStatus(orderID, customerID, status string) error {
+	order, _, err := s.orderRepo.GetOrderByID(orderID)
+	if err != nil {
+		return err
+	}
+
+	if order.CustomerID.String() != customerID && customerID != "admin" {
+		return errors.New("Access denied")
+	}
+
+	if customerID != "admin" && status != "cancelled" {
+		return errors.New("Access denied")
+	}
+
+	if customerID != "admin" && (order.Status == "shipping") {
+		return errors.New("Order already in progress")
+	}
+
+	if order.Status == "cancelled" {
+		return errors.New("Order already cancelled")
+	}
+
+	if order.Status == "completed" {
+		return errors.New("Order already completed")
+	}
+
 	return s.orderRepo.UpdateOrderStatus(orderID, status)
 }
