@@ -78,7 +78,8 @@ message ListAllOrdersResponse {
 
 message UpdateOrderStatusRequest {
     string order_id = 1;
-    string status = 2;
+    string customer_id = 2;
+    string status = 3;
 }
 
 message UpdateOrderStatusResponse {

@@ -165,7 +165,7 @@ func (h *orderHandler) ListAllOrders(ctx context.Context, req *proto.ListAllOrde
 }
 
 func (h *orderHandler) UpdateOrderStatus(ctx context.Context, req *proto.UpdateOrderStatusRequest) (*proto.UpdateOrderStatusResponse, error) {
-	err := h.orderService.UpdateOrderStatus(req.OrderId, req.Status)
+	err := h.orderService.UpdateOrderStatus(req.OrderId, req.CustomerId, req.Status)
 	if err != nil {
 		return nil, err
 	}
