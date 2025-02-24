@@ -24,3 +24,9 @@ coverage.txt
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+# git
+.git
+.gitignore
+.gitattributes
+.github/
