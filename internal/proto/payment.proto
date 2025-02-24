@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package payment;
+
+option go_package = "../proto";
+
+service PaymentService {
+    rpc GeneratePaymentURL(GeneratePaymentURLRequest) returns (GeneratePaymentURLResponse);
+    rpc StorePayment(StorePaymentRequest) returns (StorePaymentResponse);
+    rpc GetPayment(GetPaymentRequest) returns (GetPaymentResponse);
+    rpc GetPaymentByOrderID(GetPaymentByOrderIDRequest) returns (GetPaymentResponse);
+    rpc GetPaymentByTransactionID(GetPaymentByTransactionIDRequest) returns (GetPaymentResponse);
+    rpc RefundPayment(RefundPaymentRequest) returns (RefundPaymentResponse);
+}
+
+message GeneratePaymentURLRequest {
+    string order_id = 1;
+    string customer_id = 2;
+}
+
+message GeneratePaymentURLResponse {
+    string payment_id = 1;
+    string url = 2;
+}
+
+message StorePaymentRequest {
+    string transaction_id = 2;
+    string order_id = 3;
+    string customer_id = 4;
+    double amount = 5;
+    string status = 6;
+}
+
+message StorePaymentResponse {
+    string message = 1;
+}
+
+message GetPaymentRequest {
+    string payment_id = 1;
+    string customer_id = 2;
+}
+
+message GetPaymentByOrderIDRequest {
+    string order_id = 1;
+    string customer_id = 2;
+}
+
+message GetPaymentByTransactionIDRequest {
+    string transaction_id = 1;
+    string customer_id = 2;
+}
+
+message GetPaymentResponse {
+    string payment_id = 1;
+    string transaction_id = 2;
+    string order_id = 3;
+    string customer_id = 4;
+    double amount = 5;
+    string status = 6;
+}
+
+message RefundPaymentRequest {
+    string transaction_id = 1;
+}
+
+message RefundPaymentResponse {
+    string message = 1;
+}
