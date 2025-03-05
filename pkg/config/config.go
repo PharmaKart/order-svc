@@ -33,7 +33,7 @@ func LoadConfig() *Config {
 // getDBConnString constructs the PostgreSQL connection string.
 func getDBConnString() string {
 	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		"postgres://%s:%s@%s:%s/%s?sslmode=prefer",
 		getEnv("DB_USER", "postgres"),
 		getEnv("DB_PASSWORD", "postgres"),
 		getEnv("DB_HOST", "localhost"),
