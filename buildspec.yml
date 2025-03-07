@@ -1,11 +1,5 @@
 version: 0.2
 
-env:
-  variables:
-     AWS_DEFAULT_REGION: "ca-central-1"
-     IMAGE_REPO_NAME: "pharmakart/order-svc"
-     AWS_ACCOUNT_ID: "719150847619"
-
 phases:
   install:
     commands:
