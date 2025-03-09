@@ -21,6 +21,14 @@ message OrderItem {
     double price = 4;
 }
 
+message Order {
+    string order_id = 1;
+    string customer_id = 2;
+    repeated OrderItem items = 3;
+    string status = 4;
+    optional string prescription_url = 5;
+}
+
 message PlaceOrderRequest {
     string customer_id = 1;
     repeated OrderItem items = 2;
@@ -28,9 +36,10 @@ message PlaceOrderRequest {
 }
 
 message PlaceOrderResponse {
-    string order_id = 1;
-    string payment_url = 2;
-    common.Error error = 3;
+    bool success = 1;
+    string order_id = 2;
+    string payment_url = 3;
+    common.Error error = 4;
 }
 
 message GetOrderRequest {
@@ -39,12 +48,13 @@ message GetOrderRequest {
 }
 
 message GetOrderResponse {
-    string order_id = 1;
-    string customer_id = 2;
-    repeated OrderItem items = 3;
-    string status = 4;
-    optional string prescription_url = 5;
-    common.Error error = 6;
+    bool success = 1;
+    string order_id = 2;
+    string customer_id = 3;
+    repeated OrderItem items = 4;
+    string status = 5;
+    optional string prescription_url = 6;
+    common.Error error = 7;
 }
 
 message ListCustomersOrdersRequest {
@@ -58,11 +68,12 @@ message ListCustomersOrdersRequest {
 }
 
 message ListCustomersOrdersResponse {
-    repeated GetOrderResponse orders = 1;
-    int32 total = 2;
-    int32 page = 3;
-    int32 limit = 4;
-    common.Error error = 5;
+    bool success = 1;
+    repeated Order orders = 2;
+    int32 total = 3;
+    int32 page = 4;
+    int32 limit = 5;
+    common.Error error = 6;
 }
 
 message ListAllOrdersRequest {
@@ -75,11 +86,12 @@ message ListAllOrdersRequest {
 }
 
 message ListAllOrdersResponse {
-    repeated GetOrderResponse orders = 1;
-    int32 total = 2;
-    int32 page = 3;
-    int32 limit = 4;
-    common.Error error = 5;
+    bool success = 1;
+    repeated Order orders = 2;
+    int32 total = 3;
+    int32 page = 4;
+    int32 limit = 5;
+    common.Error error = 6;
 }
 
 message UpdateOrderStatusRequest {
@@ -89,6 +101,7 @@ message UpdateOrderStatusRequest {
 }
 
 message UpdateOrderStatusResponse {
-    string message = 1;
-    common.Error error = 2;
+    bool success = 1;
+    string message = 2;
+    common.Error error = 3;
 }

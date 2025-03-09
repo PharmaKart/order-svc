@@ -30,14 +30,15 @@ message CreateProductRequest {
 }
 
 message CreateProductResponse {
-    string id = 1;
-    string name = 2;
-    string description = 3;
-    double price = 4;
-    int32 stock = 5;
-    bool requires_prescription = 6;
-    string image_url = 7;
-    common.Error error = 8;
+    bool success = 1;
+    string id = 2;
+    string name = 3;
+    string description = 4;
+    double price = 5;
+    int32 stock = 6;
+    bool requires_prescription = 7;
+    string image_url = 8;
+    common.Error error = 9;
 }
 
 message UpdateProductRequest {
@@ -46,8 +47,9 @@ message UpdateProductRequest {
 }
 
 message UpdateProductResponse {
-    string message = 1;
-    common.Error error = 2;
+    bool success = 1;
+    string message = 2;
+    common.Error error = 3;
 }
 
 message DeleteProductRequest {
@@ -55,8 +57,9 @@ message DeleteProductRequest {
 }
 
 message DeleteProductResponse {
-    string message = 1;
-    common.Error error = 2;
+    bool success = 1;
+    string message = 2;
+    common.Error error = 3;
 }
 
 message GetProductRequest {
@@ -64,8 +67,9 @@ message GetProductRequest {
 }
 
 message GetProductResponse {
-    Product product = 1;
-    common.Error error = 2;
+    bool success = 1;
+    Product product = 2;
+    common.Error error = 3;
 }
 
 message ListProductsRequest {
@@ -78,11 +82,12 @@ message ListProductsRequest {
 }
 
 message ListProductsResponse {
-    repeated Product products = 1;
-    int32 total = 2;
-    int32 page = 3;
-    int32 limit = 4;
-    common.Error error = 5;
+    bool success = 1;
+    repeated Product products = 2;
+    int32 total = 3;
+    int32 page = 4;
+    int32 limit = 5;
+    common.Error error = 6;
 }
 
 message UpdateStockRequest {
@@ -92,6 +97,7 @@ message UpdateStockRequest {
 }
 
 message UpdateStockResponse {
-    string message = 1;
-    common.Error error = 2;
+    bool success = 1;
+    string message = 2;
+    common.Error error = 3;
 }

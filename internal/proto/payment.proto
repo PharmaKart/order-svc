@@ -21,9 +21,10 @@ message GeneratePaymentURLRequest {
 }
 
 message GeneratePaymentURLResponse {
-    string payment_id = 1;
-    string url = 2;
-    common.Error error = 3;
+    bool success = 1;
+    string payment_id = 2;
+    string url = 3;
+    common.Error error = 4;
 }
 
 message StorePaymentRequest {
@@ -35,8 +36,9 @@ message StorePaymentRequest {
 }
 
 message StorePaymentResponse {
-    string message = 1;
-    common.Error error = 2;
+    bool success = 1;
+    string message = 2;
+    common.Error error = 3;
 }
 
 message GetPaymentRequest {
@@ -55,13 +57,14 @@ message GetPaymentByTransactionIDRequest {
 }
 
 message GetPaymentResponse {
-    string payment_id = 1;
-    string transaction_id = 2;
-    string order_id = 3;
-    string customer_id = 4;
-    double amount = 5;
-    string status = 6;
-    common.Error error = 7;
+    bool success = 1;
+    string payment_id = 2;
+    string transaction_id = 3;
+    string order_id = 4;
+    string customer_id = 5;
+    double amount = 6;
+    string status = 7;
+    common.Error error = 8;
 }
 
 message RefundPaymentRequest {
@@ -69,6 +72,7 @@ message RefundPaymentRequest {
 }
 
 message RefundPaymentResponse {
-    string message = 1;
-    common.Error error = 2;
+    bool success = 1;
+    string message = 2;
+    common.Error error = 3;
 }

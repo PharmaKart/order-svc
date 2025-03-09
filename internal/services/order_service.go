@@ -2,11 +2,11 @@ package services
 
 import (
 	"context"
-	"errors"
 
 	"github.com/PharmaKart/order-svc/internal/models"
 	"github.com/PharmaKart/order-svc/internal/proto"
 	"github.com/PharmaKart/order-svc/internal/repositories"
+	"github.com/PharmaKart/order-svc/pkg/errors"
 )
 
 type OrderService interface {
@@ -51,7 +51,7 @@ func (s *orderService) CreateOrder(order models.Order, orderItems []models.Order
 			return "", "", err
 		}
 		if int(product.Product.Stock) < item.Quantity {
-			return "", "", errors.New("Product out of stock")
+			return "", "", errors.NewValidationError("stock", "Not enough stock available")
 		}
 		// Deduct stock from product
 		_, err = s.productClient.UpdateStock(ctx, &proto.UpdateStockRequest{
@@ -155,23 +155,23 @@ func (s *orderService) UpdateOrderStatus(orderID, customerID, status string) err
 	}
 
 	if order.CustomerID.String() != customerID && customerID != "admin" {
-		return errors.New("Access denied")
+		return errors.NewAuthError("Access denied")
 	}
 
 	if customerID != "admin" && status != "cancelled" {
-		return errors.New("Access denied")
+		return errors.NewAuthError("Access denied")
 	}
 
 	if customerID != "admin" && (order.Status == "shipping") {
-		return errors.New("Order already in progress")
+		return errors.NewAuthError("Access denied")
 	}
 
 	if order.Status == "cancelled" {
-		return errors.New("Order already cancelled")
+		return errors.NewConflictError("Order already cancelled")
 	}
 
 	if order.Status == "completed" {
-		return errors.New("Order already completed")
+		return errors.NewConflictError("Order already completed")
 	}
 
 	return s.orderRepo.UpdateOrderStatus(orderID, status)

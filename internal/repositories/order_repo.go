@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/PharmaKart/order-svc/internal/models"
+	"github.com/PharmaKart/order-svc/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -24,13 +25,8 @@ func NewOrderRepository(db *gorm.DB) OrderRepository {
 }
 
 func (r *orderRepository) CreateOrder(order *models.Order) (string, error) {
-	stmt := r.db.Session(&gorm.Session{DryRun: true}).Create(order).Statement
-	sql := stmt.SQL.String()
-	fmt.Printf("Generated SQL: %s\n", sql)
-	fmt.Printf("Variables: %v\n", stmt.Vars)
-	// return r.db.Create(order).Error
 	if err := r.db.Create(order).Error; err != nil {
-		return "", err
+		return "", errors.NewInternalError(err)
 	}
 
 	return order.ID.String(), nil
@@ -39,14 +35,18 @@ func (r *orderRepository) CreateOrder(order *models.Order) (string, error) {
 func (r *orderRepository) GetOrderByID(orderID string) (*models.Order, *[]models.OrderItem, error) {
 	var order models.Order
 	var items []models.OrderItem
+
 	err := r.db.Where("id = ?", orderID).First(&order).Error
 	if err != nil {
-		return nil, nil, err
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil, errors.NewNotFoundError(fmt.Sprintf("Order with ID '%s' not found", orderID))
+		}
+		return nil, nil, errors.NewInternalError(err)
 	}
 
 	err = r.db.Where("order_id = ?", orderID).Find(&items).Error
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.NewInternalError(err)
 	}
 
 	return &order, &items, nil
@@ -63,7 +63,7 @@ func (r *orderRepository) ListCustomersOrders(customerID string, page int32, lim
 		limit = 10
 	}
 
-	query := r.db
+	query := r.db.Where("customer_id = ?", customerID)
 	if filter != "" && filterValue != "" {
 		query = query.Where(filter+" = ?", filterValue)
 	}
@@ -77,14 +77,15 @@ func (r *orderRepository) ListCustomersOrders(customerID string, page int32, lim
 
 	err := query.Offset(int((page - 1) * limit)).Limit(int(limit)).Find(&orders).Error
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, errors.NewInternalError(err)
 	}
 
-	err = query.Model(&models.Order{}).Where("customer_id = ?", customerID).Count(&total).Error
+	err = query.Model(&models.Order{}).Count(&total).Error
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, errors.NewInternalError(err)
 	}
-	return orders, int32(total), err
+
+	return orders, int32(total), nil
 }
 
 func (r *orderRepository) ListAllOrders(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Order, int32, error) {
@@ -112,17 +113,27 @@ func (r *orderRepository) ListAllOrders(page int32, limit int32, sortBy string, 
 
 	err := query.Offset(int((page - 1) * limit)).Limit(int(limit)).Find(&orders).Error
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, errors.NewInternalError(err)
 	}
 
 	err = query.Model(&models.Order{}).Count(&total).Error
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, errors.NewInternalError(err)
 	}
 
-	return orders, int32(total), err
+	return orders, int32(total), nil
 }
 
 func (r *orderRepository) UpdateOrderStatus(orderID string, status string) error {
-	return r.db.Model(&models.Order{}).Where("id = ?", orderID).Update("status", status).Error
+	result := r.db.Model(&models.Order{}).Where("id = ?", orderID).Update("status", status)
+
+	if result.Error != nil {
+		return errors.NewInternalError(result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		return errors.NewNotFoundError(fmt.Sprintf("Order with ID '%s' not found", orderID))
+	}
+
+	return nil
 }
