@@ -26,7 +26,7 @@ dev:
 # Generate Go code from .proto file
 proto:
 	@echo "Generating Go code from Proto files..."
-	protoc --go_out=$(PROTO_OUT) --go-grpc_out=$(PROTO_OUT) $(PROTO_DIR)/*.proto
+	protoc -I$(PROTO_DIR) --go_out=$(PROTO_OUT) --go-grpc_out=$(PROTO_OUT) $(PROTO_DIR)/*.proto
 
 # Clean up build artifacts
 clean:

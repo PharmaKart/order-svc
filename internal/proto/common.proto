@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package common;
+
+option go_package = "../proto";
+
+message KeyValuePair {
+    string key = 1;
+    string value = 2;
+}
+
+message Error {
+    string type = 1;
+    string message = 2;
+    repeated KeyValuePair details = 3;
+}

@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package payment;
 
+import "common.proto";
+
 option go_package = "../proto";
 
 service PaymentService {
@@ -21,6 +23,7 @@ message GeneratePaymentURLRequest {
 message GeneratePaymentURLResponse {
     string payment_id = 1;
     string url = 2;
+    common.Error error = 3;
 }
 
 message StorePaymentRequest {
@@ -33,6 +36,7 @@ message StorePaymentRequest {
 
 message StorePaymentResponse {
     string message = 1;
+    common.Error error = 2;
 }
 
 message GetPaymentRequest {
@@ -57,6 +61,7 @@ message GetPaymentResponse {
     string customer_id = 4;
     double amount = 5;
     string status = 6;
+    common.Error error = 7;
 }
 
 message RefundPaymentRequest {
@@ -65,4 +70,5 @@ message RefundPaymentRequest {
 
 message RefundPaymentResponse {
     string message = 1;
+    common.Error error = 2;
 }
