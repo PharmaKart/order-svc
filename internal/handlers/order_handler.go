@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"context"
-	"errors"
 
 	"github.com/PharmaKart/order-svc/internal/models"
 	"github.com/PharmaKart/order-svc/internal/proto"
 	"github.com/PharmaKart/order-svc/internal/repositories"
 	"github.com/PharmaKart/order-svc/internal/services"
+	"github.com/PharmaKart/order-svc/pkg/errors"
+	"github.com/PharmaKart/order-svc/pkg/utils"
 	"github.com/google/uuid"
 )
 
@@ -33,7 +34,24 @@ func NewOrderHandler(orderRepo repositories.OrderRepository, orderItemRepo repos
 func (h *orderHandler) PlaceOrder(ctx context.Context, req *proto.PlaceOrderRequest) (*proto.PlaceOrderResponse, error) {
 	customerId, err := uuid.Parse(req.CustomerId)
 	if err != nil {
-		return nil, err
+		if appErr, ok := errors.IsAppError(err); ok {
+			return &proto.PlaceOrderResponse{
+				Success: false,
+				Error: &proto.Error{
+					Type:    string(appErr.Type),
+					Message: appErr.Message,
+					Details: utils.ConvertMapToKeyValuePairs(appErr.Details),
+				},
+			}, nil
+		}
+
+		return &proto.PlaceOrderResponse{
+			Success: false,
+			Error: &proto.Error{
+				Type:    string(errors.InternalError),
+				Message: "An unexpected error occurred",
+			},
+		}, nil
 	}
 	order := &models.Order{
 		CustomerID:      customerId,
@@ -45,7 +63,24 @@ func (h *orderHandler) PlaceOrder(ctx context.Context, req *proto.PlaceOrderRequ
 	for i, item := range req.Items {
 		productId, err := uuid.Parse(item.ProductId)
 		if err != nil {
-			return nil, err
+			if appErr, ok := errors.IsAppError(err); ok {
+				return &proto.PlaceOrderResponse{
+					Success: false,
+					Error: &proto.Error{
+						Type:    string(appErr.Type),
+						Message: appErr.Message,
+						Details: utils.ConvertMapToKeyValuePairs(appErr.Details),
+					},
+				}, nil
+			}
+
+			return &proto.PlaceOrderResponse{
+				Success: false,
+				Error: &proto.Error{
+					Type:    string(errors.InternalError),
+					Message: "An unexpected error occurred",
+				},
+			}, nil
 		}
 		orderItems[i] = models.OrderItem{
 			ProductID:   productId,
@@ -56,7 +91,24 @@ func (h *orderHandler) PlaceOrder(ctx context.Context, req *proto.PlaceOrderRequ
 
 	orderId, paymentUrl, err := h.orderService.CreateOrder(*order, orderItems)
 	if err != nil {
-		return nil, err
+		if appErr, ok := errors.IsAppError(err); ok {
+			return &proto.PlaceOrderResponse{
+				Success: false,
+				Error: &proto.Error{
+					Type:    string(appErr.Type),
+					Message: appErr.Message,
+					Details: utils.ConvertMapToKeyValuePairs(appErr.Details),
+				},
+			}, nil
+		}
+
+		return &proto.PlaceOrderResponse{
+			Success: false,
+			Error: &proto.Error{
+				Type:    string(errors.InternalError),
+				Message: "An unexpected error occurred",
+			},
+		}, nil
 	}
 
 	return &proto.PlaceOrderResponse{
@@ -68,13 +120,33 @@ func (h *orderHandler) PlaceOrder(ctx context.Context, req *proto.PlaceOrderRequ
 func (h *orderHandler) GetOrder(ctx context.Context, req *proto.GetOrderRequest) (*proto.GetOrderResponse, error) {
 	order, orderItems, err := h.orderService.GetOrderByID(req.OrderId)
 	if err != nil {
-		return nil, err
+		if appErr, ok := errors.IsAppError(err); ok {
+			return &proto.GetOrderResponse{
+				Error: &proto.Error{
+					Type:    string(appErr.Type),
+					Message: appErr.Message,
+					Details: utils.ConvertMapToKeyValuePairs(appErr.Details),
+				},
+			}, nil
+		}
+
+		return &proto.GetOrderResponse{
+			Error: &proto.Error{
+				Type:    string(errors.InternalError),
+				Message: "An unexpected error occurred",
+			},
+		}, nil
 	}
 
 	customerId := req.CustomerId
 
 	if customerId != "admin" && order.CustomerID.String() != customerId {
-		return nil, errors.New("Access denied")
+		return &proto.GetOrderResponse{
+			Error: &proto.Error{
+				Type:    string(errors.AuthError),
+				Message: "You are not authorized to view this order",
+			},
+		}, nil
 	}
 
 	protoOrderItems := make([]*proto.OrderItem, len(*orderItems))
@@ -99,12 +171,28 @@ func (h *orderHandler) GetOrder(ctx context.Context, req *proto.GetOrderRequest)
 func (h *orderHandler) ListCustomersOrders(ctx context.Context, req *proto.ListCustomersOrdersRequest) (*proto.ListCustomersOrdersResponse, error) {
 	orders, total, err := h.orderService.ListCustomersOrders(req.CustomerId, req.Page, req.Limit, req.SortBy, req.SortOrder, req.Filter, req.FilterValue)
 	if err != nil {
-		return nil, err
+		if appErr, ok := errors.IsAppError(err); ok {
+			return &proto.ListCustomersOrdersResponse{
+				Success: false,
+				Error: &proto.Error{
+					Type:    string(appErr.Type),
+					Message: appErr.Message,
+					Details: utils.ConvertMapToKeyValuePairs(appErr.Details),
+				},
+			}, nil
+		}
+		return &proto.ListCustomersOrdersResponse{
+			Success: false,
+			Error: &proto.Error{
+				Type:    string(errors.InternalError),
+				Message: "An unexpected error occurred",
+			},
+		}, nil
 	}
 
-	protoOrders := make([]*proto.GetOrderResponse, len(*orders))
+	protoOrders := make([]*proto.Order, len(*orders))
 	for i, order := range *orders {
-		protoOrders[i] = &proto.GetOrderResponse{
+		protoOrders[i] = &proto.Order{
 			OrderId:         order.OrderID,
 			CustomerId:      order.CustomerID,
 			Status:          order.Status,
@@ -133,12 +221,28 @@ func (h *orderHandler) ListCustomersOrders(ctx context.Context, req *proto.ListC
 func (h *orderHandler) ListAllOrders(ctx context.Context, req *proto.ListAllOrdersRequest) (*proto.ListAllOrdersResponse, error) {
 	orders, total, err := h.orderService.ListAllOrders(req.Page, req.Limit, req.SortBy, req.SortOrder, req.Filter, req.FilterValue)
 	if err != nil {
-		return nil, err
+		if appErr, ok := errors.IsAppError(err); ok {
+			return &proto.ListAllOrdersResponse{
+				Success: false,
+				Error: &proto.Error{
+					Type:    string(appErr.Type),
+					Message: appErr.Message,
+					Details: utils.ConvertMapToKeyValuePairs(appErr.Details),
+				},
+			}, nil
+		}
+		return &proto.ListAllOrdersResponse{
+			Success: false,
+			Error: &proto.Error{
+				Type:    string(errors.InternalError),
+				Message: "An unexpected error occurred",
+			},
+		}, nil
 	}
 
-	protoOrders := make([]*proto.GetOrderResponse, len(*orders))
+	protoOrders := make([]*proto.Order, len(*orders))
 	for i, order := range *orders {
-		protoOrders[i] = &proto.GetOrderResponse{
+		protoOrders[i] = &proto.Order{
 			OrderId:         order.OrderID,
 			CustomerId:      order.CustomerID,
 			Status:          order.Status,
@@ -167,7 +271,23 @@ func (h *orderHandler) ListAllOrders(ctx context.Context, req *proto.ListAllOrde
 func (h *orderHandler) UpdateOrderStatus(ctx context.Context, req *proto.UpdateOrderStatusRequest) (*proto.UpdateOrderStatusResponse, error) {
 	err := h.orderService.UpdateOrderStatus(req.OrderId, req.CustomerId, req.Status)
 	if err != nil {
-		return nil, err
+		if appErr, ok := errors.IsAppError(err); ok {
+			return &proto.UpdateOrderStatusResponse{
+				Success: false,
+				Error: &proto.Error{
+					Type:    string(appErr.Type),
+					Message: appErr.Message,
+					Details: utils.ConvertMapToKeyValuePairs(appErr.Details),
+				},
+			}, nil
+		}
+		return &proto.UpdateOrderStatusResponse{
+			Success: false,
+			Error: &proto.Error{
+				Type:    string(errors.InternalError),
+				Message: "An unexpected error occurred",
+			},
+		}, nil
 	}
 
 	return &proto.UpdateOrderStatusResponse{}, nil
