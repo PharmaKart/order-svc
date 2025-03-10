@@ -14,3 +14,9 @@ message Error {
     string message = 2;
     repeated KeyValuePair details = 3;
 }
+
+message Filter {
+    string column = 1;
+    string operator = 2;
+    string value = 3;
+}

@@ -59,12 +59,11 @@ message GetOrderResponse {
 
 message ListCustomersOrdersRequest {
     string customer_id = 1;
-    int32 page = 2;
-    int32 limit = 3;
-    string sort_by = 4;
-    string sort_order = 5;
-    string filter = 6;
-    string filter_value = 7;
+    common.Filter filter = 2;
+    string sort_by = 3;
+    string sort_order = 4;
+    int32 page = 5;
+    int32 limit = 6;
 }
 
 message ListCustomersOrdersResponse {
@@ -77,12 +76,11 @@ message ListCustomersOrdersResponse {
 }
 
 message ListAllOrdersRequest {
-    int32 page = 1;
-    int32 limit = 2;
-    string sort_by = 3;
-    string sort_order = 4;
-    string filter = 5;
-    string filter_value = 6;
+    common.Filter filter = 1;
+    string sort_by = 2;
+    string sort_order = 3;
+    int32 page = 4;
+    int32 limit = 5;
 }
 
 message ListAllOrdersResponse {

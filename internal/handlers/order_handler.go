@@ -112,6 +112,7 @@ func (h *orderHandler) PlaceOrder(ctx context.Context, req *proto.PlaceOrderRequ
 	}
 
 	return &proto.PlaceOrderResponse{
+		Success:    true,
 		OrderId:    orderId,
 		PaymentUrl: paymentUrl,
 	}, nil
@@ -122,6 +123,7 @@ func (h *orderHandler) GetOrder(ctx context.Context, req *proto.GetOrderRequest)
 	if err != nil {
 		if appErr, ok := errors.IsAppError(err); ok {
 			return &proto.GetOrderResponse{
+				Success: false,
 				Error: &proto.Error{
 					Type:    string(appErr.Type),
 					Message: appErr.Message,
@@ -131,6 +133,7 @@ func (h *orderHandler) GetOrder(ctx context.Context, req *proto.GetOrderRequest)
 		}
 
 		return &proto.GetOrderResponse{
+			Success: false,
 			Error: &proto.Error{
 				Type:    string(errors.InternalError),
 				Message: "An unexpected error occurred",
@@ -142,6 +145,7 @@ func (h *orderHandler) GetOrder(ctx context.Context, req *proto.GetOrderRequest)
 
 	if customerId != "admin" && order.CustomerID.String() != customerId {
 		return &proto.GetOrderResponse{
+			Success: false,
 			Error: &proto.Error{
 				Type:    string(errors.AuthError),
 				Message: "You are not authorized to view this order",
@@ -160,6 +164,7 @@ func (h *orderHandler) GetOrder(ctx context.Context, req *proto.GetOrderRequest)
 	}
 
 	return &proto.GetOrderResponse{
+		Success:         true,
 		OrderId:         order.ID.String(),
 		CustomerId:      order.CustomerID.String(),
 		Status:          order.Status,
@@ -169,7 +174,15 @@ func (h *orderHandler) GetOrder(ctx context.Context, req *proto.GetOrderRequest)
 }
 
 func (h *orderHandler) ListCustomersOrders(ctx context.Context, req *proto.ListCustomersOrdersRequest) (*proto.ListCustomersOrdersResponse, error) {
-	orders, total, err := h.orderService.ListCustomersOrders(req.CustomerId, req.Page, req.Limit, req.SortBy, req.SortOrder, req.Filter, req.FilterValue)
+	var filter models.Filter
+	if req.Filter != nil {
+		filter = models.Filter{
+			Column:   req.Filter.Column,
+			Operator: req.Filter.Operator,
+			Value:    req.Filter.Value,
+		}
+	}
+	orders, total, err := h.orderService.ListCustomersOrders(req.CustomerId, filter, req.SortBy, req.SortOrder, req.Page, req.Limit)
 	if err != nil {
 		if appErr, ok := errors.IsAppError(err); ok {
 			return &proto.ListCustomersOrdersResponse{
@@ -211,15 +224,24 @@ func (h *orderHandler) ListCustomersOrders(ctx context.Context, req *proto.ListC
 	}
 
 	return &proto.ListCustomersOrdersResponse{
-		Orders: protoOrders,
-		Total:  total,
-		Page:   req.Page,
-		Limit:  req.Limit,
+		Success: true,
+		Orders:  protoOrders,
+		Total:   total,
+		Page:    req.Page,
+		Limit:   req.Limit,
 	}, nil
 }
 
 func (h *orderHandler) ListAllOrders(ctx context.Context, req *proto.ListAllOrdersRequest) (*proto.ListAllOrdersResponse, error) {
-	orders, total, err := h.orderService.ListAllOrders(req.Page, req.Limit, req.SortBy, req.SortOrder, req.Filter, req.FilterValue)
+	var filter models.Filter
+	if req.Filter != nil {
+		filter = models.Filter{
+			Column:   req.Filter.Column,
+			Operator: req.Filter.Operator,
+			Value:    req.Filter.Value,
+		}
+	}
+	orders, total, err := h.orderService.ListAllOrders(filter, req.SortBy, req.SortOrder, req.Page, req.Limit)
 	if err != nil {
 		if appErr, ok := errors.IsAppError(err); ok {
 			return &proto.ListAllOrdersResponse{
@@ -261,10 +283,11 @@ func (h *orderHandler) ListAllOrders(ctx context.Context, req *proto.ListAllOrde
 	}
 
 	return &proto.ListAllOrdersResponse{
-		Orders: protoOrders,
-		Total:  total,
-		Page:   req.Page,
-		Limit:  req.Limit,
+		Success: true,
+		Orders:  protoOrders,
+		Total:   total,
+		Page:    req.Page,
+		Limit:   req.Limit,
 	}, nil
 }
 
@@ -290,5 +313,7 @@ func (h *orderHandler) UpdateOrderStatus(ctx context.Context, req *proto.UpdateO
 		}, nil
 	}
 
-	return &proto.UpdateOrderStatusResponse{}, nil
+	return &proto.UpdateOrderStatusResponse{
+		Success: true,
+	}, nil
 }

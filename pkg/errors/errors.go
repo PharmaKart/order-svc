@@ -12,6 +12,7 @@ type ErrorType string
 const (
 	ValidationError ErrorType = "VALIDATION_ERROR"
 	NotFoundError   ErrorType = "NOT_FOUND_ERROR"
+	BadRequestError ErrorType = "BAD_REQUEST_ERROR"
 	AuthError       ErrorType = "AUTH_ERROR"
 	ConflictError   ErrorType = "CONFLICT_ERROR"
 	InternalError   ErrorType = "INTERNAL_ERROR"
@@ -70,6 +71,15 @@ func NewNotFoundError(message string) *AppError {
 		Type:    NotFoundError,
 		Message: message,
 		Status:  http.StatusNotFound,
+	}
+}
+
+// NewBadRequestError creates a new bad request error
+func NewBadRequestError(message string) *AppError {
+	return &AppError{
+		Type:    BadRequestError,
+		Message: message,
+		Status:  http.StatusBadRequest,
 	}
 }
 
