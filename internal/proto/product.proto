@@ -13,6 +13,7 @@ service ProductService {
     rpc GetProduct(GetProductRequest) returns (GetProductResponse);
     rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
     rpc UpdateStock(UpdateStockRequest) returns (UpdateStockResponse);
+    rpc GetInventoryLogs(GetInventoryLogsRequest) returns (GetInventoryLogsResponse);
 }
 
 message Product {
@@ -23,6 +24,14 @@ message Product {
     int32 stock = 5;
     bool requires_prescription = 6;
     string image_url = 7;
+}
+
+message InventoryLog {
+    string id = 1;
+    string product_id = 2;
+    string change_type = 3;
+    int32 quantity_change = 4;
+    string created_at = 5;
 }
 
 message CreateProductRequest {
@@ -99,4 +108,22 @@ message UpdateStockResponse {
     bool success = 1;
     string message = 2;
     common.Error error = 3;
+}
+
+message GetInventoryLogsRequest {
+    string product_id = 1;
+    common.Filter filter = 2;
+    string sort_by = 3;
+    string sort_order = 4;
+    int32 page = 5;
+    int32 limit = 6;
+}
+
+message GetInventoryLogsResponse {
+    bool success = 1;
+    repeated InventoryLog logs = 2;
+    int32 total = 3;
+    int32 page = 4;
+    int32 limit = 5;
+    common.Error error = 6;
 }
