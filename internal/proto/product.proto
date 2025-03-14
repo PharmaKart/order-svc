@@ -82,11 +82,12 @@ message GetProductResponse {
 }
 
 message ListProductsRequest {
-    common.Filter filter = 1;
-    string sort_by = 2;
-    string sort_order = 3;
-    int32 page = 4;
-    int32 limit = 5;
+    string search = 1;
+    common.Filter filter = 2;
+    string sort_by = 3;
+    string sort_order = 4;
+    int32 page = 5;
+    int32 limit = 6;
 }
 
 message ListProductsResponse {
