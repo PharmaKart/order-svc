@@ -12,6 +12,7 @@ service OrderService {
     rpc ListCustomersOrders(ListCustomersOrdersRequest) returns (ListCustomersOrdersResponse);
     rpc ListAllOrders(ListAllOrdersRequest) returns (ListAllOrdersResponse);
     rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (UpdateOrderStatusResponse);
+    rpc GenerateNewPaymentUrl(GenerateNewPaymentUrlRequest) returns (GenerateNewPaymentUrlResponse);
 }
 
 message OrderItem {
@@ -27,6 +28,10 @@ message Order {
     repeated OrderItem items = 3;
     string status = 4;
     optional string prescription_url = 5;
+    double shipping_cost = 6;
+    double subtotal = 7;
+    int64 created_at = 8;
+    int64 updated_at = 9;
 }
 
 message PlaceOrderRequest {
@@ -42,6 +47,17 @@ message PlaceOrderResponse {
     common.Error error = 4;
 }
 
+message GenerateNewPaymentUrlRequest {
+    string order_id = 1;
+    string customer_id = 2;
+}
+
+message GenerateNewPaymentUrlResponse {
+    bool success = 1;
+    string payment_url = 2;
+    common.Error error = 3;
+}
+
 message GetOrderRequest {
     string order_id = 1;
     string customer_id = 2;
@@ -54,7 +70,11 @@ message GetOrderResponse {
     repeated OrderItem items = 4;
     string status = 5;
     optional string prescription_url = 6;
-    common.Error error = 7;
+    double shipping_cost = 7;
+    double subtotal = 8;
+    int64 created_at = 9;
+    int64 updated_at = 10;
+    common.Error error = 11;
 }
 
 message ListCustomersOrdersRequest {

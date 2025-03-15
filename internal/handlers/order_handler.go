@@ -18,6 +18,7 @@ type OrderHandler interface {
 	ListCustomersOrders(ctx context.Context, req *proto.ListCustomersOrdersRequest) (*proto.ListCustomersOrdersResponse, error)
 	ListAllOrders(ctx context.Context, req *proto.ListAllOrdersRequest) (*proto.ListAllOrdersResponse, error)
 	UpdateOrderStatus(ctx context.Context, req *proto.UpdateOrderStatusRequest) (*proto.UpdateOrderStatusResponse, error)
+	GenerateNewPaymentUrl(ctx context.Context, req *proto.GenerateNewPaymentUrlRequest) (*proto.GenerateNewPaymentUrlResponse, error)
 }
 
 type orderHandler struct {
@@ -118,6 +119,38 @@ func (h *orderHandler) PlaceOrder(ctx context.Context, req *proto.PlaceOrderRequ
 	}, nil
 }
 
+func (h *orderHandler) GenerateNewPaymentUrl(ctx context.Context, req *proto.GenerateNewPaymentUrlRequest) (*proto.GenerateNewPaymentUrlResponse, error) {
+	orderId := req.OrderId
+	customerId := req.CustomerId
+
+	paymentUrl, err := h.orderService.GenerateNewPaymentUrl(orderId, customerId)
+	if err != nil {
+		if appErr, ok := errors.IsAppError(err); ok {
+			return &proto.GenerateNewPaymentUrlResponse{
+				Success: false,
+				Error: &proto.Error{
+					Type:    string(appErr.Type),
+					Message: appErr.Message,
+					Details: utils.ConvertMapToKeyValuePairs(appErr.Details),
+				},
+			}, nil
+		}
+
+		return &proto.GenerateNewPaymentUrlResponse{
+			Success: false,
+			Error: &proto.Error{
+				Type:    string(errors.InternalError),
+				Message: "An unexpected error occurred",
+			},
+		}, nil
+	}
+
+	return &proto.GenerateNewPaymentUrlResponse{
+		Success:    true,
+		PaymentUrl: paymentUrl,
+	}, nil
+}
+
 func (h *orderHandler) GetOrder(ctx context.Context, req *proto.GetOrderRequest) (*proto.GetOrderResponse, error) {
 	order, orderItems, err := h.orderService.GetOrderByID(req.OrderId)
 	if err != nil {
@@ -169,7 +202,11 @@ func (h *orderHandler) GetOrder(ctx context.Context, req *proto.GetOrderRequest)
 		CustomerId:      order.CustomerID.String(),
 		Status:          order.Status,
 		PrescriptionUrl: order.PrescriptionURL,
+		ShippingCost:    order.ShippingCost,
+		Subtotal:        order.Subtotal,
 		Items:           protoOrderItems,
+		CreatedAt:       order.CreatedAt.UnixMilli(),
+		UpdatedAt:       order.UpdatedAt.UnixMilli(),
 	}, nil
 }
 
@@ -209,7 +246,11 @@ func (h *orderHandler) ListCustomersOrders(ctx context.Context, req *proto.ListC
 			OrderId:         order.OrderID,
 			CustomerId:      order.CustomerID,
 			Status:          order.Status,
-			PrescriptionUrl: &order.PrescriptionURL,
+			PrescriptionUrl: order.PrescriptionURL,
+			ShippingCost:    float64(order.ShippingCost),
+			Subtotal:        float64(order.Subtotal),
+			CreatedAt:       order.CreatedAt.UnixMilli(),
+			UpdatedAt:       order.UpdatedAt.UnixMilli(),
 		}
 		protoOrderItems := make([]*proto.OrderItem, len(order.Items))
 		for j, item := range order.Items {
@@ -268,7 +309,11 @@ func (h *orderHandler) ListAllOrders(ctx context.Context, req *proto.ListAllOrde
 			OrderId:         order.OrderID,
 			CustomerId:      order.CustomerID,
 			Status:          order.Status,
-			PrescriptionUrl: &order.PrescriptionURL,
+			PrescriptionUrl: order.PrescriptionURL,
+			ShippingCost:    float64(order.ShippingCost),
+			Subtotal:        float64(order.Subtotal),
+			CreatedAt:       order.CreatedAt.UnixMilli(),
+			UpdatedAt:       order.UpdatedAt.UnixMilli(),
 		}
 		protoOrderItems := make([]*proto.OrderItem, len(order.Items))
 		for j, item := range order.Items {

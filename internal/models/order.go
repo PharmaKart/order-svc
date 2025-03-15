@@ -12,8 +12,10 @@ type Order struct {
 	CustomerID      uuid.UUID `gorm:"not null"`
 	Status          string    `gorm:"type:varchar(50);not null;check:status IN ('pending', 'approved', 'paid', 'shipped', 'completed', 'cancelled')"`
 	PrescriptionURL *string   `gorm:"type:text"`
-	CreatedAt       time.Time `gorm:"default:now()"`
-	UpdatedAt       time.Time `gorm:"default:now()"`
+	ShippingCost    float64   `gorm:"type:numeric(10,2);default:0.00"`
+	Subtotal        float64   `gorm:"type:numeric(10,2);default:0.00"`
+	CreatedAt       time.Time `gorm:"type:timestamptz;default:now()"`
+	UpdatedAt       time.Time `gorm:"type:timestamptz;default:now()"`
 }
 
 func (o *Order) BeforeCreate(tx *gorm.DB) (err error) {
