@@ -14,7 +14,7 @@ type OrderItem struct {
 	ProductName string    `gorm:"not null"`
 	Quantity    int       `gorm:"not null;check:quantity > 0"`
 	Price       float64   `gorm:"not null"`
-	CreatedAt   time.Time `gorm:"default:now()"`
+	CreatedAt   time.Time `gorm:"type:timestamptz;default:now()"`
 }
 
 func (oi *OrderItem) BeforeCreate(tx *gorm.DB) (err error) {
