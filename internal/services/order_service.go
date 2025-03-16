@@ -148,6 +148,13 @@ func (s *orderService) GenerateNewPaymentUrl(orderID, customerID string) (string
 		return "", err
 	}
 
+	if !paymentURL.Success {
+		return "", &errors.AppError{
+			Type:    errors.InternalError,
+			Message: paymentURL.Error.Message,
+		}
+	}
+
 	return paymentURL.Url, nil
 }
 
